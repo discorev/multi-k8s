@@ -1,0 +1,37 @@
+language: generic
+sudo: required
+services:
+  - docker
+env:
+  global:
+    - SHA=$(git rev-parse HEAD)
+    - CLOUDSDK_CORE_DISABLE_PROMPTS=1
+before_install:
+  - openssl aes-256-cbc -K $encrypted_3a35b1cdf9a9_key -iv $encrypted_3a35b1cdf9a9_iv -in service-account.json.enc -out service-account.json -d
+  - curl https://sdk.cloud.google.com | bash > /dev/null;
+  - source $HOME/google-cloud-sdk/path.bash.inc
+  - gcloud components update kubectl
+  - gcloud auth activate-service-account --key-file service-account.json
+  - gcloud config set project multi-k8s-266818
+  - gcloud config set compute/zone europe-west2-a
+  - gcloud container clusters get-credentials multi-cluster
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - docker build -t discorev/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true discorev/react-test npm run test
+
+deploy:
+  provider: script
+  script: bash ./deploy.sh
+  on:
+    branch: master
+# after_success:
+#   - docker build -t discorev/multi-client ./client
+#   - docker build -t discorev/multi-nginx ./nginx
+#   - docker build -t discorev/multi-server ./server
+#   - docker build -t discorev/multi-worker ./worker
+#   - docker push discorev/multi-client
+#   - docker push discorev/multi-nginx
+#   - docker push discorev/multi-server
+#   - docker push discorev/multi-worker
