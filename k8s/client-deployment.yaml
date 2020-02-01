@@ -15,9 +15,5 @@ spec:
       containers:
         - name: client
           image: discorev/multi-client
-          resources:
-            limits:
-              memory: "128Mi"
-              cpu: "100m"
           ports:
             - containerPort: 3000

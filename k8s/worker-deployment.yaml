@@ -15,10 +15,6 @@ spec:
       containers:
         - name: worker
           image: discorev/multi-worker
-          resources:
-            limits:
-              memory: "128Mi"
-              cpu: "100m"
           env:
             - name: REDIS_HOST
               value: redis-cluster-ip-service

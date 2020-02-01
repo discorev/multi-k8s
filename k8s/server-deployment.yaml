@@ -15,10 +15,6 @@ spec:
       containers:
         - name: server
           image: discorev/multi-server
-          resources:
-            limits:
-              memory: "128Mi"
-              cpu: "100m"
           ports:
             - containerPort: 5000
           env:
