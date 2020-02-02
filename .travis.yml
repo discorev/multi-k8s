@@ -26,12 +26,3 @@ deploy:
   script: bash ./deploy.sh
   on:
     branch: master
-# after_success:
-#   - docker build -t discorev/multi-client ./client
-#   - docker build -t discorev/multi-nginx ./nginx
-#   - docker build -t discorev/multi-server ./server
-#   - docker build -t discorev/multi-worker ./worker
-#   - docker push discorev/multi-client
-#   - docker push discorev/multi-nginx
-#   - docker push discorev/multi-server
-#   - docker push discorev/multi-worker
