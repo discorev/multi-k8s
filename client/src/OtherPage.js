@@ -2,7 +2,7 @@ import React, { Component }  from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 
-class Other extends Component {
+class OtherPage extends Component {
     handleReset = async (event) => {
         event.preventDefault();
 
@@ -21,4 +21,4 @@ class Other extends Component {
     }
 }
 
-export default Other;
+export default OtherPage;
