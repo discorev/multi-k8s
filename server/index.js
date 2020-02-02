@@ -52,9 +52,13 @@ app.get('/values/current', async (req, res) => {
 });
 
 app.put('/values', async (req, res) => {
-    const index = req.body.index;
+    const index = parseInt(req.body.index);
 
-    if (parseInt(index) > 40) {
+    if (index < 0) {
+        return res.status(422).send('Index too low');
+    }
+
+    if (index > 40) {
         return res.status(422).send('Index too high');
     }
 
