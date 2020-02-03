@@ -43,8 +43,8 @@ wss.on('connection', (ws) => {
     redisSubscriber.on('message', (channel, message) => {
         ws.send(message);
     })
-    redisSubscriber.subscribe('update');
 });
+redisSubscriber.subscribe('update');
 
 // Express route handlers
 
