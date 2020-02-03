@@ -6,6 +6,7 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 
 const app = express();
+const http = require('http').createServer(app);
 app.use(cors());
 app.use(bodyParser.json());
 
@@ -32,6 +33,18 @@ const redisClient = redis.createClient({
     retry_strategy: () => 1000
 });
 const redisPublisher = redisClient.duplicate();
+const redisSubscriber = redisClient.duplicate();
+const WebSocket = require('ws');
+const wss = new WebSocket.Server({server: http});
+
+
+wss.on('connection', (ws) => {
+    console.log('Connected');
+    redisSubscriber.on('message', (channel, message) => {
+        ws.send(message);
+    })
+    redisSubscriber.subscribe('update');
+});
 
 // Express route handlers
 
@@ -80,6 +93,6 @@ app.delete('/values', async (req, res) => {
     res.send({complete: true});
 });
 
-app.listen(5000, err => {
+http.listen(5000, err => {
     console.log('Listening');
 });

@@ -9,6 +9,17 @@ class Fib extends Component {
     };
 
     componentDidMount() {
+        const socket = new WebSocket('ws://localhost/api');
+        socket.addEventListener('open', function (event) {
+            console.log('connected socket');
+            socket.send('Hello Server!');
+        });
+        socket.addEventListener('message', (event) => {
+            const calced = event.data.split(':');
+            const values = this.state.values;
+            values[calced[0]] = calced[1];
+            this.setState({values});
+        });
         this.fetchValues();
         this.fetchIndexes();
     }
