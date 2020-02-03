@@ -9,7 +9,7 @@ class Fib extends Component {
     };
 
     componentDidMount() {
-        const socket = new WebSocket('ws://localhost/api');
+        const socket = new WebSocket('ws://' + window.location.host + '/api');
         socket.addEventListener('open', function (event) {
             console.log('connected socket');
             socket.send('Hello Server!');
