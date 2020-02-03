@@ -16,8 +16,14 @@ class Fib extends Component {
         });
         socket.addEventListener('message', (event) => {
             const calced = event.data.split(':');
-            const values = this.state.values;
-            values[calced[0]] = calced[1];
+            let values = this.state.values;
+
+            if (values instanceof Object) {
+                values[calced[0]] = calced[1];
+            } else {
+                values = {};
+                values[calced[0]] = calced[1];
+            }
             this.setState({values});
         });
         this.fetchValues();
@@ -42,9 +48,11 @@ class Fib extends Component {
         await axios.put('/api/values', {
             index: this.state.index
         });
+        let indexes = this.state.seenIndexes;
+        indexes.push({"number": parseInt(this.state.index)});
+        indexes.sort((a,b) => a.number > b.number ? 1 : (a.number < b.number ? -1 : 0));
+        this.setState({ seenIndexes: indexes});
         this.setState({ index: '' });
-        this.fetchValues();
-        this.fetchIndexes();
     }
 
     renderSeenIndexes() {
