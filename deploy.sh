@@ -12,10 +12,10 @@ docker push discorev/multi-worker:latest
 docker push discorev/multi-worker:$SHA
 
 # Apply the kubernetes configs from the repo
-kubectl apply -f k8s
+# kubectl apply -f k8s
 
 # Imperatively set the image to the build we've just done - this will cause an update
 # on an existing kube deployment
-kubectl set image deployments/client-deployment client=discorev/multi-client:$SHA
-kubectl set image deployments/server-deployment server=discorev/multi-server:$SHA
-kubectl set image deployments/worker-deployment worker=discorev/multi-worker:$SHA
+# kubectl set image deployments/client-deployment client=discorev/multi-client:$SHA
+# kubectl set image deployments/server-deployment server=discorev/multi-server:$SHA
+# kubectl set image deployments/worker-deployment worker=discorev/multi-worker:$SHA
