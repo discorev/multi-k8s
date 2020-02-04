@@ -1,6 +1,8 @@
 const keys = require('./keys');
 
+// --------------------------------------
 // Express App Setup
+// --------------------------------------
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -10,7 +12,9 @@ const http = require('http').createServer(app);
 app.use(cors());
 app.use(bodyParser.json());
 
+// --------------------------------------
 // Postgres Client Setup
+// --------------------------------------
 const { Pool } = require('pg');
 const pgClient = new Pool({
     user: keys.pgUser,
@@ -20,34 +24,74 @@ const pgClient = new Pool({
     port: keys.pgPort
 });
 pgClient.on('error', () => console.log('Lost PG connection'));
-
 pgClient
     .query('CREATE TABLE IF NOT EXISTS values (number INT)')
     .catch(err => console.log(err));
 
+// --------------------------------------
 // Redis Client Setup
+// --------------------------------------
 const redis = require('redis');
 const redisClient = redis.createClient({
     host: keys.redisHost,
     port: keys.redisPort,
     retry_strategy: () => 1000
 });
-const redisPublisher = redisClient.duplicate();
-const redisSubscriber = redisClient.duplicate();
+
+// --------------------------------------
+// WebSockets
+// --------------------------------------
 const WebSocket = require('ws');
 const wss = new WebSocket.Server({server: http});
+wss.on('connection', ws => {
+    ws.isAlive = true;
 
-
-wss.on('connection', (ws) => {
+    ws.on('pong', () =>{
+        ws.isAlive = true;
+    });
     console.log('Connected');
-    redisSubscriber.on('message', (channel, message) => {
-        ws.send(message);
-    })
 });
-redisSubscriber.subscribe('update');
+const interval = setInterval(() => {
+    wss.clients.forEach(function each(ws) {
+        if (ws.isAlive === false) {
+            console.log('Client is dead');
+            return ws.terminate();
+        }
+        
+        ws.isAlive = false;
+        ws.ping(() => {});
+    });
+}, 3000);
 
+// --------------------------------------
+// Redis subscriptions
+// --------------------------------------
+
+// Subscribe to calculation updates
+const redisUpdateSubscription = redisClient.duplicate();
+redisUpdateSubscription.on('message', (channel, message) => {
+    wss.clients.forEach((ws) => {
+        const msg = JSON.stringify({result: message});
+        ws.send(msg);
+    });
+});
+redisUpdateSubscription.subscribe('update');
+
+// Subscribe to new indexes being inserted
+// We can't just use the put method below as that will only message
+// clients on the same server
+const redisInsertSubscription = redisClient.duplicate();
+redisInsertSubscription.on('message', (channel, message) => {
+    wss.clients.forEach((ws) => {
+        const msg = JSON.stringify({number: message});
+        ws.send(msg);
+    });
+});
+redisInsertSubscription.subscribe('insert');
+
+// --------------------------------------
 // Express route handlers
-
+// --------------------------------------
 app.get('/', (req, res) => {
     res.send('Hi');
 });
@@ -64,6 +108,7 @@ app.get('/values/current', async (req, res) => {
     });
 });
 
+const redisPublisher = redisClient.duplicate();
 app.put('/values', async (req, res) => {
     const index = parseInt(req.body.index);
 
@@ -93,6 +138,9 @@ app.delete('/values', async (req, res) => {
     res.send({complete: true});
 });
 
+// --------------------------------------
+// Setup a http listener
+// --------------------------------------
 http.listen(5000, err => {
     console.log('Listening');
 });
