@@ -10,22 +10,39 @@ class Fib extends Component {
 
     componentDidMount() {
         const socket = new WebSocket( (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/api');
-        socket.addEventListener('open', function (event) {
-            console.log('connected socket');
+        socket.onopen = (event) => {
+            console.log('opened', event);
             socket.send('Hello Server!');
-        });
-        socket.addEventListener('message', (event) => {
-            const calced = event.data.split(':');
-            let values = this.state.values;
-
-            if (values instanceof Object) {
-                values[calced[0]] = calced[1];
-            } else {
-                values = {};
-                values[calced[0]] = calced[1];
+        };
+        socket.onmessage = (event) => {
+            const value = JSON.parse(event.data);
+            console.log(value);
+            if (value.result) {
+                const calced = value.result.split(':');
+                let values = this.state.values;
+    
+                if (values instanceof Object) {
+                    values[calced[0]] = calced[1];
+                } else {
+                    values = {};
+                    values[calced[0]] = calced[1];
+                }
+                this.setState({values});
             }
-            this.setState({values});
-        });
+
+            if (value.number) {
+                let indexes = this.state.seenIndexes;
+                const idx = indexes.findIndex(result => result.number === value.number);
+                if (idx === -1) {
+                    indexes.push(value);
+                    indexes.sort((a,b) => a.number > b.number ? 1 : (a.number < b.number ? -1 : 0));
+                    this.setState({ seenIndexes: indexes});
+                }
+            }
+        };
+        socket.onclose = (event) => {
+            console.log('Closed socket', event);
+        };
         this.fetchValues();
         this.fetchIndexes();
     }
@@ -48,10 +65,14 @@ class Fib extends Component {
         await axios.put('/api/values', {
             index: this.state.index
         });
+        const value = {number: parseInt(this.state.index)};
         let indexes = this.state.seenIndexes;
-        indexes.push({"number": parseInt(this.state.index)});
-        indexes.sort((a,b) => a.number > b.number ? 1 : (a.number < b.number ? -1 : 0));
-        this.setState({ seenIndexes: indexes});
+        const idx = indexes.findIndex(result => result.number === value.number);
+        if (idx === -1) {
+            indexes.push(value);
+            indexes.sort((a,b) => a.number > b.number ? 1 : (a.number < b.number ? -1 : 0));
+            this.setState({ seenIndexes: indexes});
+        }
         this.setState({ index: '' });
     }
 
