@@ -8,36 +8,42 @@ class Fib extends Component {
         index: ''
     };
 
+    addIndex(value) {
+        let indexes = this.state.seenIndexes;
+        const idx = indexes.findIndex(result => result.number === value.number);
+        if (idx === -1) {
+            indexes.push(value);
+            indexes.sort((a,b) => a.number > b.number ? 1 : (a.number < b.number ? -1 : 0));
+            this.setState({ seenIndexes: indexes});
+        }
+
+    }
+
+    addValue(key, value) {
+        let values = this.state.values;
+        if (values instanceof Object) {
+            values[key] = value;
+        } else {
+            values = {};
+            values[key] = value;
+        }
+        this.setState({values});
+    }
+
     componentDidMount() {
         const socket = new WebSocket( (window.location.protocol === 'https:' ? 'wss://' : 'ws://') + window.location.host + '/api');
-        socket.onopen = (event) => {
-            console.log('opened', event);
+        socket.onopen = () => {
             socket.send('Hello Server!');
         };
         socket.onmessage = (event) => {
             const value = JSON.parse(event.data);
-            console.log(value);
             if (value.result) {
-                const calced = value.result.split(':');
-                let values = this.state.values;
-    
-                if (values instanceof Object) {
-                    values[calced[0]] = calced[1];
-                } else {
-                    values = {};
-                    values[calced[0]] = calced[1];
-                }
-                this.setState({values});
+                console.log(value);
+                this.addValue(value.result.index, value.result.number);
             }
 
             if (value.number) {
-                let indexes = this.state.seenIndexes;
-                const idx = indexes.findIndex(result => result.number === value.number);
-                if (idx === -1) {
-                    indexes.push(value);
-                    indexes.sort((a,b) => a.number > b.number ? 1 : (a.number < b.number ? -1 : 0));
-                    this.setState({ seenIndexes: indexes});
-                }
+                this.addIndex(value);
             }
         };
         socket.onclose = (event) => {
@@ -66,13 +72,7 @@ class Fib extends Component {
             index: this.state.index
         });
         const value = {number: parseInt(this.state.index)};
-        let indexes = this.state.seenIndexes;
-        const idx = indexes.findIndex(result => result.number === value.number);
-        if (idx === -1) {
-            indexes.push(value);
-            indexes.sort((a,b) => a.number > b.number ? 1 : (a.number < b.number ? -1 : 0));
-            this.setState({ seenIndexes: indexes});
-        }
+        this.addIndex(value);
         this.setState({ index: '' });
     }
 
