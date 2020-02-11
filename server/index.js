@@ -71,7 +71,7 @@ const interval = setInterval(() => {
 const redisUpdateSubscription = redisClient.duplicate();
 redisUpdateSubscription.on('message', (channel, message) => {
     wss.clients.forEach((ws) => {
-        const msg = JSON.stringify({result: message});
+        const msg = JSON.stringify({result: JSON.parse(message)});
         ws.send(msg);
     });
 });
@@ -83,7 +83,7 @@ redisUpdateSubscription.subscribe('update');
 const redisInsertSubscription = redisClient.duplicate();
 redisInsertSubscription.on('message', (channel, message) => {
     wss.clients.forEach((ws) => {
-        const msg = JSON.stringify({number: message});
+        const msg = JSON.stringify({number: parseInt(message)});
         ws.send(msg);
     });
 });
