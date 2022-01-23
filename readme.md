@@ -4,6 +4,8 @@
 
 This project is a designed to explore kubernetes deployments using a highly overly complicated architecture to allow for creating many pods and using multiple different technologies.
 
+NOTE: This project is not being updated and may use old / insecure packages. It should be used for reference only.
+
 A high level overview of the architecture is down in the image below.
 ![Architecture](/images/architecture.png)
 
